@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -57,10 +55,7 @@ func OpenCurrentDirRepository() (*Repository, error) {
 
 // GetGCMark generate a pruning marker for the key
 func (r *Repository) GetGCMark(key kube.ResourceKey) string {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%s/%s", r.RepoPath, strings.Join(r.Paths, ","))))
-	h.Write([]byte(strings.Join([]string{key.Group, key.Kind, key.Name}, "/")))
-	return "sha256." + base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	return fmt.Sprintf("%s/%s", r.RepoPath, strings.Join(r.Paths, ","))
 }
 
 // SetGCMark set a pruning marker for the resource
@@ -76,7 +71,7 @@ func (r *Repository) SetGCMark(un *unstructured.Unstructured) {
 // PopulateResourceInfoHandler checks if
 func PopulateResourceInfoHandler(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
 	gcMark := un.GetAnnotations()[annotationGCMark]
-	info := &resourceInfo{gcMark: un.GetAnnotations()[annotationGCMark]}
+	info := &resourceInfo{gcMark: gcMark}
 
 	cacheManifest := gcMark != ""
 	return info, cacheManifest
